@@ -22,7 +22,7 @@ HEAD = """<!doctype html>
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="theme-color" content="#F2F1EF">
 <meta name="description" content="متابعة مخزون قطع الغيار: خطوط الإنتاج والمعدات، سحب وإيداع بسجل كامل، وتنبيه عند الحد الأدنى.">
 <meta name="mobile-web-app-capable" content="yes">

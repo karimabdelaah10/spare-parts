@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="theme-color" content="#F2F1EF">
 <meta name="description" content="متابعة مخزون قطع الغيار: خطوط الإنتاج والمعدات، سحب وإيداع بسجل كامل، وتنبيه عند الحد الأدنى.">
 <meta name="mobile-web-app-capable" content="yes">
@@ -55,6 +55,9 @@
 
 *{box-sizing:border-box}
 html{background:var(--bg)}
+html,body{touch-action:manipulation;-webkit-text-size-adjust:100%;text-size-adjust:100%;overflow-x:clip}
+button,a,label,input,select,textarea,[data-act]{touch-action:manipulation}
+input,select,textarea{font-size:16px!important}
 body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.5;-webkit-tap-highlight-color:transparent;overscroll-behavior-x:none}
 body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
 body.locked{overflow:hidden}
@@ -84,6 +87,14 @@ svg{flex:none}
 .view.a-tab > *{animation:rise .4s cubic-bezier(.2,.8,.2,1) both}
 .view.a-tab > *:nth-child(2){animation-delay:.05s}.view.a-tab > *:nth-child(3){animation-delay:.1s}
 .view.a-tab > *:nth-child(4){animation-delay:.15s}.view.a-tab > *:nth-child(n+5){animation-delay:.2s}
+body.edge-drag{overflow:hidden;user-select:none;-webkit-user-select:none}
+#app.swiping{position:relative;z-index:1;background:var(--bg);box-shadow:0 0 0 300vmax var(--bg);will-change:transform}
+#underlay{position:fixed;inset:0;z-index:0;background:var(--bg);overflow:hidden;pointer-events:none;will-change:transform}
+#underlay .ul-in{max-width:560px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-top:env(safe-area-inset-top,0px)}
+#underlay .topbar{position:static}
+#underlay .ul-dim{position:absolute;inset:0;background:#000;opacity:.12}
+#fabSlot{transition:opacity .2s}
+body.edge-drag #fabSlot{opacity:0}
 .view.a-push{animation:pushIn .38s cubic-bezier(.32,.72,0,1) both}
 .view.a-pop{animation:popIn .32s cubic-bezier(.32,.72,0,1) both}
 .shake{animation:shake .42s ease}
@@ -576,7 +587,7 @@ applyTheme();
 
 /* ---------- version ---------- */
 const APP_MAJOR=0;          // stays 0 until phase one is finished
-const APP_BUILD=2;          // bump on every release; sw.js CACHE follows it
+const APP_BUILD=3;          // bump on every release; sw.js CACHE follows it
 const APP_VER=`${APP_MAJOR}.${APP_BUILD}`;
 
 /* ---------- rendering ---------- */
@@ -589,7 +600,7 @@ function render(animate=true){
   // keep focus/caret in search fields across live re-renders
   const ae=document.activeElement,fid=ae&&ae.id&&$('#view').contains(ae)?ae.id:null,sel=fid&&ae.selectionStart;
   const cur=S.stack[S.stack.length-1];
-  if(cur&&!entityOf(cur)){S.stack.pop();return render(animate)}
+  if(cur&&!entityOf(cur)){S.stack.pop();histDrop(1);return render(animate)}
   $('#topbar').innerHTML=topbar(cur);
   const v=$('#view');
   v.className='view';
@@ -970,9 +981,90 @@ async function clearAll(onlyDemo){
 }
 
 /* ---------- navigation ---------- */
-function go(tab){S.tab=tab;S.stack=[];S.anim='tab';render();window.scrollTo({top:0})}
-function push(v,id){S.stack.push({v,id});S.anim='push';if(v==='eq')S.eqLog='all';render();window.scrollTo({top:0})}
-function back(){S.stack.pop();S.anim='pop';render();window.scrollTo({top:0})}
+/* Pushed pages get a browser-history entry when the app runs on its own (installed / GitHub Pages),
+   so Android's back button and back gesture step back inside the app instead of closing it. */
+const STANDALONE=window.top===window;
+let skipPop=0;
+function histPush(){if(STANDALONE)try{history.pushState({sp:S.stack.length},'')}catch(e){}}
+function histDrop(n){if(STANDALONE&&n>0&&history.state&&history.state.sp){skipPop++;try{history.go(-Math.min(n,history.state.sp))}catch(e){skipPop--}}}
+function go(tab,anim=true){const n=S.stack.length;S.tab=tab;S.stack=[];S.anim='tab';render(anim);window.scrollTo({top:0});histDrop(n)}
+function push(v,id){S.stack.push({v,id});S.anim='push';if(v==='eq')S.eqLog='all';render();window.scrollTo({top:0});histPush()}
+function back(anim=true){S.stack.pop();S.anim='pop';render(anim);window.scrollTo({top:0});histDrop(1)}
+addEventListener('popstate',()=>{
+  if(skipPop){skipPop--;return}
+  if(SH){closeSheet();if(S.stack.length)histPush();return}
+  if(S.stack.length){S.stack.pop();S.anim='pop';render();window.scrollTo({top:0})}
+});
+
+/* ---------- swipe back from either screen edge ---------- */
+const EASE='cubic-bezier(.32,.72,0,1)';
+function backTarget(){
+  if(S.stack.length)return {tab:S.tab,stack:S.stack.slice(0,-1)};
+  if(S.tab!=='home')return {tab:'home',stack:[]};
+  return null;
+}
+function mountUnderlay(t){
+  $('#underlay')?.remove();
+  const sv={tab:S.tab,stack:S.stack};let html='';
+  try{S.tab=t.tab;S.stack=t.stack;const c=S.stack[S.stack.length-1];
+    html=`<header class="topbar">${topbar(c)}</header><main class="view">${c?detail(c):tabView()}</main>`}
+  catch(e){html=''}finally{S.tab=sv.tab;S.stack=sv.stack}
+  const u=document.createElement('div');u.id='underlay';u.setAttribute('aria-hidden','true');
+  u.innerHTML=`<div class="ul-in">${html.replace(/\sid="[^"]*"/g,'')}</div><div class="ul-dim"></div>`;
+  document.body.appendChild(u);return u;
+}
+const eb={track:false,on:false,decided:false,dir:1,x0:0,y0:0,dx:0,vel:0,lx:0,lt:0,ul:null,t:null};
+const EDGE=26;
+document.addEventListener('touchstart',e=>{
+  eb.track=false;
+  if(e.touches.length!==1||SH||!S.ready)return;
+  const tc=e.touches[0],W=window.innerWidth;
+  const dir=tc.clientX<=EDGE?1:tc.clientX>=W-EDGE?-1:0;
+  if(!dir)return;
+  const t=backTarget();if(!t)return;
+  Object.assign(eb,{track:true,on:false,decided:false,dir,x0:tc.clientX,y0:tc.clientY,dx:0,vel:0,lx:tc.clientX,lt:e.timeStamp,t});
+},{passive:true});
+document.addEventListener('touchmove',e=>{
+  if(!eb.track)return;
+  const tc=e.touches[0],el=$('#app');
+  if(!eb.decided){
+    const mx=tc.clientX-eb.x0,my=tc.clientY-eb.y0;
+    if(Math.abs(mx)<8&&Math.abs(my)<8)return;
+    eb.decided=true;
+    if(!(mx*eb.dir>0&&Math.abs(mx)>Math.abs(my)*1.2)){eb.track=false;return}
+    eb.on=true;eb.x0=tc.clientX;
+    el.classList.add('swiping');el.style.transition='none';
+    const r=el.getBoundingClientRect(),W=window.innerWidth;
+    el.style.clipPath=eb.dir>0?`inset(-300vh -300vw -300vh -${Math.ceil(r.left)}px)`:`inset(-300vh -${Math.ceil(W-r.right)}px -300vh -300vw)`;
+    eb.ul=mountUnderlay(eb.t);eb.ul.style.transform=`translateX(${-30*eb.dir}%)`;
+    document.body.classList.add('edge-drag');
+  }
+  e.preventDefault();
+  eb.dx=Math.max(0,(tc.clientX-eb.x0)*eb.dir);
+  const dt=e.timeStamp-eb.lt;if(dt>0)eb.vel=.7*eb.vel+.3*(((tc.clientX-eb.lx)*eb.dir)/dt);
+  eb.lx=tc.clientX;eb.lt=e.timeStamp;
+  el.style.transform=`translateX(${eb.dx*eb.dir}px)`;
+  const pr=Math.min(1,eb.dx/window.innerWidth);
+  eb.ul.style.transform=`translateX(${-30*eb.dir*(1-pr)}%)`;
+  eb.ul.lastChild.style.opacity=(.12*(1-pr)).toFixed(3);
+},{passive:false});
+function endEdge(){
+  if(!eb.on){eb.track=false;return}
+  const el=$('#app'),ul=eb.ul,dir=eb.dir,t=eb.t;
+  const commit=eb.dx>window.innerWidth*.33||(eb.vel>.45&&eb.dx>30);
+  eb.on=eb.track=false;eb.ul=null;
+  const clean=()=>{el.classList.remove('swiping');el.style.transform='';el.style.transition='';el.style.clipPath='';document.body.classList.remove('edge-drag')};
+  const ulTo=(x,dim,ms)=>{ul.style.transition=`transform ${ms}ms ${EASE}`;ul.style.transform=`translateX(${x}%)`;const dm=ul.lastChild;dm.style.transition=`opacity ${ms}ms`;dm.style.opacity=dim};
+  if(!commit){el.style.transition=`transform .3s ${EASE}`;el.style.transform='';ulTo(-30*dir,.12,300);setTimeout(()=>{clean();ul.remove()},300);return}
+  el.style.transition=`transform .24s ${EASE}`;el.style.transform=`translateX(${dir*100}%)`;ulTo(0,0,240);
+  setTimeout(()=>{
+    clean();
+    if(S.stack.length)back(false);else go(t.tab,false);
+    requestAnimationFrame(()=>ul.remove());
+  },230);
+}
+document.addEventListener('touchend',endEdge);document.addEventListener('touchcancel',endEdge);
+document.addEventListener('gesturestart',e=>e.preventDefault());
 
 /* ---------- toast ---------- */
 let tt;
