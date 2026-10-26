@@ -103,6 +103,17 @@ svg{flex:none}
 .mono{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;height:auto;padding:10px 12px;direction:ltr;text-align:left;resize:vertical}
 .seg.seg3{grid-template-columns:repeat(3,1fr)}
 .seg3 .seg-thumb{width:calc(33.333% - 2.667px)}
+.buybar{display:flex;align-items:center;gap:12px;width:100%;text-align:start;background:var(--danger-soft);border-radius:var(--r);padding:12px 14px;transition:transform .12s}
+.buybar:active{transform:scale(.98)}
+.buybar .main{flex:1;min-width:0;display:flex;flex-direction:column}
+.buybar b{font-family:var(--f-disp);font-weight:600;color:var(--danger)}
+.buybar .main span{font-size:13px;color:var(--ink)}
+.buybar .chev{color:var(--danger)}
+.beacon.sm{width:38px;height:38px}
+.need{display:flex;flex-direction:column;align-items:center;flex:none;background:var(--accent-soft);color:var(--accent);border-radius:12px;padding:4px 10px;min-width:54px}
+.need b{font-family:var(--f-disp);font-size:20px;font-weight:700;line-height:1.15}
+.need small{font-size:11px;font-weight:600}
+.row button.main{display:flex;flex-direction:column;gap:1px;min-width:0;flex:1}
 .theme-btn{background:var(--surface);box-shadow:var(--shadow);width:40px;height:40px;border-radius:12px}
 .theme-btn svg{width:20px;height:20px;animation:pop .35s ease}
 .theming,.theming *{transition:background-color .35s ease,color .35s ease,border-color .35s ease!important}
@@ -229,7 +240,8 @@ svg{flex:none}
 .chip.on{background:var(--ink);color:var(--bg)}
 .chip .c{font-family:var(--f-disp);font-size:12px;opacity:.7}
 .chip.dz.on{background:var(--danger);color:#fff}
-.sel{height:44px;border-radius:12px;border:1.5px solid var(--line);background:var(--surface);padding-inline:12px;width:100%}
+.sel{height:46px;border-radius:12px;border:1.5px solid var(--line);background-color:var(--surface);padding-inline:14px 40px;width:100%;font-weight:500;cursor:pointer;outline:none;transition:border-color .15s}
+.sel:focus{border-color:var(--accent)}
 
 /* detail */
 .dcard{background:var(--surface);border-radius:22px;padding:18px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:14px}
@@ -294,7 +306,10 @@ svg{flex:none}
 .field > label,.field > .flabel{font-size:13px;font-weight:700;color:var(--muted)}
 .inp{height:50px;border-radius:14px;border:1.5px solid var(--line);background:var(--surface);padding-inline:14px;width:100%;outline:none;transition:border-color .15s}
 .inp:focus{border-color:var(--accent)}
-select.inp{appearance:none;-webkit-appearance:none;background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),linear-gradient(135deg,var(--muted) 50%,transparent 50%);background-position:18px 22px,24px 22px;background-size:6px 6px;background-repeat:no-repeat;padding-inline:14px 36px}
+select.inp{padding-inline:14px 40px;cursor:pointer}
+/* one arrow for every dropdown: at the inline end (left in RTL), centred, clear of the text */
+.sel,select.inp{appearance:none;-webkit-appearance:none;background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),linear-gradient(135deg,var(--muted) 50%,transparent 50%);background-position:left 18px center,left 24px center;background-size:6px 6px;background-repeat:no-repeat}
+[dir="ltr"] .sel,[dir="ltr"] select.inp{background-position:right 24px center,right 18px center}
 .inp.bad{border-color:var(--danger);background:var(--danger-soft)}
 .row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .hint{margin:0;font-size:12.5px;color:var(--muted)}
@@ -397,6 +412,8 @@ const P={
   download:'<path d="M12 3v12M7 10l5 5 5-5"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/>',
   upload:'<path d="M12 15V3M7 8l5-5 5 5"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/>',
   sheet:'<rect x="4" y="3" width="16" height="18" rx="2"/><path d="M4 9h16M4 15h16M10 3v18"/>',
+  cart:'<circle cx="9" cy="20" r="1.5"/><circle cx="18" cy="20" r="1.5"/><path d="M2 3h3l2.6 12.4a1.5 1.5 0 0 0 1.5 1.1h8.7a1.5 1.5 0 0 0 1.5-1.1L21 7H6"/>',
+  copy:'<rect x="8" y="8" width="13" height="13" rx="2"/><path d="M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h3"/>',
   cloud:'<path d="M7 18a5 5 0 1 1 .9-9.9A6 6 0 0 1 19 10a4 4 0 0 1-1 8z"/>',
   phone:'<rect x="6" y="2" width="12" height="20" rx="2.5"/><path d="M11 18h2"/>',
   paste:'<rect x="6" y="4" width="12" height="17" rx="2"/><path d="M9 4V3h6v1M9 11h6M9 15h4"/>',
@@ -559,7 +576,7 @@ applyTheme();
 
 /* ---------- version ---------- */
 const APP_MAJOR=0;          // stays 0 until phase one is finished
-const APP_BUILD=1;          // bump on every release; sw.js CACHE follows it
+const APP_BUILD=2;          // bump on every release; sw.js CACHE follows it
 const APP_VER=`${APP_MAJOR}.${APP_BUILD}`;
 
 /* ---------- rendering ---------- */
@@ -581,7 +598,7 @@ function render(animate=true){
   renderNav();renderFab(cur);
   if(fid){const el=document.getElementById(fid);if(el){el.focus();try{el.setSelectionRange(sel,sel)}catch(e){}}}
 }
-function entityOf(c){if(c.v==='settings')return true;return c.v==='part'?part(c.id):c.v==='eq'?eq(c.id):c.v==='line'?line(c.id):null}
+function entityOf(c){if(c.v==='settings'||c.v==='buy')return true;return c.v==='part'?part(c.id):c.v==='eq'?eq(c.id):c.v==='line'?line(c.id):null}
 function syncPill(){
   if(S.mode==='cloud')return '<span class="sync cloud"><i></i>متزامن</span>';
   if(S.mode==='local')return '<span class="sync local"><i></i>على الجهاز ده</span>';
@@ -592,6 +609,7 @@ function topbar(cur){
     const sub={home:fDay.format(new Date()),parts:`${N(S.parts.length)} صنف`,eqs:`${N(S.eqs.length)} معدة على ${N(S.lines.length)} خط`,lines:`${N(S.lines.length)} خط`,log:`${N(S.moves.length)} حركة متسجلة`}[S.tab];
     return `<div class="t-main"><div class="t-title big">${TITLES[S.tab]}</div><div class="t-sub">${sub}</div></div><button class="iconbtn theme-btn" data-act="theme" aria-label="${THEME_L[S.theme]}" title="${THEME_L[S.theme]}">${ic(S.theme==='light'?'sun':S.theme==='dark'?'moon':'auto')}</button><button class="iconbtn theme-btn" data-act="open-settings" aria-label="الإعدادات">${ic('gear')}</button>`;
   }
+  if(cur.v==='buy'){const n=lowParts().length;return `<button class="iconbtn" data-act="back" aria-label="رجوع">${ic('back',2)}</button><div class="t-main"><div class="t-title">قائمة الشراء</div><div class="t-sub">${n?`${N(n)} ${n===1?'صنف محتاج':'أصناف محتاجة'} شراء`:'مفيش حاجة ناقصة'}</div></div>`}
   if(cur.v==='settings')return `<button class="iconbtn" data-act="back" aria-label="رجوع">${ic('back',2)}</button><div class="t-main"><div class="t-title">الإعدادات</div><div class="t-sub">الإصدار ${APP_VER}</div></div>${syncPill()}`;
   const e=entityOf(cur);
   const kind={part:'صنف',eq:'معدة',line:'خط إنتاج'}[cur.v];
@@ -675,7 +693,7 @@ function homeView(){
     <div class="tape"></div>
     <div class="alarm-head"><span class="beacon">${ic('alert',2)}</span><div><b>تنبيه خطر: ${N(low.length)} ${low.length===1?'صنف':'أصناف'} وصلت للحد الأدنى</b><span>اطلب كمية جديدة قبل ما المعدة تقف</span></div></div>
     <div class="alarm-list">${low.slice(0,4).map(p=>`<button class="a-item" data-act="open-part" data-id="${p.id}"><span class="main"><span class="nm">${esc(p.name)}</span><span class="sb">الحد الأدنى ${N(p.min)}</span></span><span class="q">${N(p.qty)}</span>${ic('chev')}</button>`).join('')}
-    ${low.length>4?`<button class="link" data-act="low-all" style="align-self:center">شوف الـ ${N(low.length)} كلهم</button>`:''}</div>
+    </div><div style="padding:0 16px 14px"><button class="btn primary block" data-act="open-buy">${ic('cart',2)}قائمة الشراء${low.length>4?` (${N(low.length)} صنف)`:''}</button></div>
   </section>`:S.parts.length?`<div class="okcard">${ic('shield',2)}كل القطع فوق الحد الأدنى</div>`:''}
   ${demo?`<div class="demo"><p>دي بيانات تجريبية علشان تشوف التطبيق شغال. امسحها لما تبدأ تدخل بياناتك.</p><button class="btn sm" data-act="clear-demo">امسحها</button></div>`:''}
   <div class="stats">
@@ -695,7 +713,8 @@ function homeView(){
 function partsView(){
   if(!S.parts.length)return S.eqs.length?emptyBox('bearing','مفيش قطع غيار لسه','ضيف أول صنف واربطه بالمعدات اللي بيشتغل عليها.','new-part','صنف جديد'):emptyBox('machine','ضيف المعدات الأول','كل قطعة لازم تتربط بمعدة، فابدأ بالمعدات.','new-eq','معدة جديدة');
   const low=lowParts().length,near=nearParts().length;
-  return `<div class="search">${ic('search')}<input id="partSearch" type="search" placeholder="دوّر على صنف أو معدة" value="${esc(S.q)}" autocomplete="off"></div>
+  return `${low?`<button class="buybar" data-act="open-buy"><span class="beacon sm">${ic('cart',2)}</span><span class="main"><b>قائمة الشراء</b><span>${N(low)} ${low===1?'صنف وصل':'أصناف وصلت'} للحد الأدنى</span></span>${ic('chev')}</button>`:''}
+  <div class="search">${ic('search')}<input id="partSearch" type="search" placeholder="دوّر على صنف أو معدة" value="${esc(S.q)}" autocomplete="off"></div>
   <div class="chips">
     <button class="chip ${S.partFilter==='all'?'on':''}" data-act="pfilter" data-v="all">الكل <span class="c">${N(S.parts.length)}</span></button>
     <button class="chip dz ${S.partFilter==='low'?'on':''}" data-act="pfilter" data-v="low">ناقص <span class="c">${N(low)}</span></button>
@@ -756,7 +775,7 @@ function eqOptions(selId,mark){
 }
 
 /* details */
-function detail(c){if(c.v==='settings')return settingsView();return c.v==='part'?partDetail(part(c.id)):c.v==='eq'?eqDetail(eq(c.id)):lineDetail(line(c.id))}
+function detail(c){if(c.v==='settings')return settingsView();if(c.v==='buy')return buyView();return c.v==='part'?partDetail(part(c.id)):c.v==='eq'?eqDetail(eq(c.id)):lineDetail(line(c.id))}
 function partDetail(p){
   const st=status(p),cap=Math.max(p.min*2.5,p.qty,1),pct=Math.min(100,p.qty/cap*100),mp=Math.min(100,p.min/cap*100);
   const es=(p.eqIds||[]).map(eq).filter(Boolean);
@@ -802,6 +821,42 @@ function lineDetail(l){
   <section class="section"><div class="section-head"><h2 class="h2">المعدات</h2><button class="link" data-act="new-eq" data-line="${l.id}">+ معدة</button></div>
     ${es.length?`<div class="list">${es.map(eqRow).join('')}</div>`:'<p class="hint">مفيش معدات على الخط ده لسه.</p>'}</section>
   <section class="section"><h2 class="h2">السحب على الخط</h2>${grouped(ms)}</section>`;
+}
+
+/* ---------- buy list ---------- */
+const needQty=p=>Math.max(1,(+p.min||0)*2-(+p.qty||0)); // suggestion: bring stock back to twice the minimum
+function buyView(){
+  const low=lowParts();
+  if(!low.length)return `<div class="okcard">${ic('shield',2)}كل القطع فوق الحد الأدنى. مفيش حاجة محتاجة شراء دلوقتي.</div>`;
+  const units=low.reduce((s,p)=>s+needQty(p),0);
+  return `<section class="alarm"><div class="tape"></div>
+    <div class="alarm-head"><span class="beacon">${ic('cart',2)}</span><div><b>${N(low.length)} ${low.length===1?'صنف محتاج':'أصناف محتاجة'} شراء</b><span>حوالي ${N(units)} قطعة علشان المخزن يرجع لضعف الحد الأدنى</span></div></div>
+    <div class="d-actions" style="padding:6px 16px 16px">
+      <button class="btn primary" data-act="export-buy">${ic('sheet',2)}تصدير Excel</button>
+      <button class="btn" data-act="copy-buy">${ic('copy',2)}نسخ كرسالة</button>
+    </div></section>
+  <div class="list">${low.map(p=>{const es=(p.eqIds||[]).map(i=>eq(i)?.name).filter(Boolean);
+    return `<div class="row st-low"><button class="tile" data-act="open-part" data-id="${p.id}" aria-label="${esc(p.name)}">${ic('bearing')}</button>
+      <button class="main" data-act="open-part" data-id="${p.id}" style="text-align:start"><span class="r-title">${esc(p.name)}</span><span class="r-sub">${es.length?esc(es.join('، ')):'مش مربوطة بمعدة'}</span>
+        <span class="r-sub">المتاح <b class="num" style="color:var(--danger)">${N(p.qty)}</b> · الحد ${N(p.min)}</span></button>
+      <span class="need"><b>${N(needQty(p))}</b><small>اشتري</small></span>
+      <button class="btn sm" data-act="move" data-type="in" data-id="${p.id}" aria-label="إيداع ${esc(p.name)}">${ic('in',2)}</button></div>`}).join('')}</div>
+  <p class="hint" style="text-align:center">الكمية المقترحة بترجّع المخزن لضعف الحد الأدنى. لما تشتري، دوس على زرار الإيداع جنب القطعة.</p>`;
+}
+function buyRows(){return lowParts().map(p=>{const es=(p.eqIds||[]).map(eq).filter(Boolean);
+  return {p,es,lines:[...new Set(es.map(e=>line(e.lineId)?.name).filter(Boolean))]}})}
+async function exportBuy(){
+  const rows=[['#','الصنف','المتاح','الحد الأدنى','الكمية المقترحة للشراء','المعدات','الخطوط']].concat(buyRows().map((r,i)=>[i+1,r.p.name,r.p.qty,r.p.min,needQty(r.p),r.es.map(e=>e.name).join(' / '),r.lines.join(' / ')]));
+  const res=await saveFile(`buy-list-${stamp()}.csv`,csv(rows),'text/csv');
+  if(res==='ok')toast('ملف قائمة الشراء اتحفظ');else if(res==='fallback')toast('مش قادر أحفظ ملفات هنا. افتح التطبيق من الموبايل.',true);
+}
+async function copyBuy(){
+  const txt=`قائمة شراء قطع غيار — ${fShort.format(new Date())}\n`+buyRows().map((r,i)=>`${i+1}. ${r.p.name}: اشتري ${needQty(r.p)} (المتاح ${r.p.qty}، الحد ${r.p.min})`).join('\n');
+  try{await navigator.clipboard.writeText(txt);toast('القائمة اتنسخت. الصقها في واتساب أو أي رسالة.')}
+  catch(e){
+    if(window.top===window&&navigator.share){try{await navigator.share({text:txt});return}catch(e2){if(e2&&e2.name==='AbortError')return}}
+    toast('مقدرتش أنسخ. استخدم تصدير Excel.',true);
+  }
 }
 
 /* ---------- settings ---------- */
@@ -1153,7 +1208,7 @@ function openAlerts(){
   <div class="list">${low.map(p=>{const es=(p.eqIds||[]).map(i=>eq(i)?.name).filter(Boolean);
     return `<div class="row st-low"><span class="tile">${ic('bearing')}</span><span class="main"><span class="r-title">${esc(p.name)}</span><span class="r-sub">${esc(es.join('، '))}</span></span>
     <span class="qty"><b>${N(p.qty)}</b><small>الحد ${N(p.min)}</small></span><button class="btn sm" data-act="move" data-type="in" data-id="${p.id}" aria-label="إيداع">${ic('in',2)}</button></div>`}).join('')}</div>
-  <button class="btn block" style="margin-top:16px" data-act="sheet-close">تمام</button>`;
+  <div class="row2" style="margin-top:16px"><button class="btn" data-act="sheet-close">تمام</button><button class="btn primary" data-act="open-buy">${ic('cart',2)}قائمة الشراء</button></div>`;
 }
 
 /* ---------- events ---------- */
@@ -1195,6 +1250,9 @@ document.addEventListener('click',async ev=>{
     case 'clear-all':openConfirm('امسح كل البيانات؟',`${N(S.parts.length)} صنف و${N(S.eqs.length)} معدة و${N(S.lines.length)} خط و${N(S.moves.length)} حركة هيتمسحوا نهائي. اعمل نسخة احتياطية الأول لو محتاجها.`,'امسح الكل',async()=>{await clearAll(false);toast('اتمسحت كل البيانات');go('home')});break;
     case 'open-settings':closeSheet(true);S.exportText=null;S.pasteOpen=false;push('settings','settings');break;
     case 'export-json':exportJson();break;
+    case 'open-buy':closeSheet(true);push('buy','buy');break;
+    case 'export-buy':exportBuy();break;
+    case 'copy-buy':copyBuy();break;
     case 'export-stock':exportStock();break;
     case 'export-log':exportLog();break;
     case 'toggle-paste':S.pasteOpen=!S.pasteOpen;render(false);if(S.pasteOpen)setTimeout(()=>$('#importBox')?.focus(),60);break;
