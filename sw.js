@@ -1,7 +1,7 @@
 // Network-first for the app page (so updates show on the next open), cache fallback when offline.
 // Icons and fonts: cache-first. Install bypasses the HTTP cache so a new version never caches the old page.
 // CACHE is stamped by build.py from APP_MAJOR/APP_BUILD in app.html.
-const CACHE = 'spare-parts-v0.3';
+const CACHE = 'spare-parts-v0.4';
 const SHELL = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png', './apple-touch-icon.png'];
 
 self.addEventListener('install', e => {
